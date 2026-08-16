@@ -1,0 +1,56 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Jupyter Notebook Checkpoints
+.ipynb_checkpoints/
+
+# Model Checkpoints & Large Weights (>100MB cannot be pushed to GitHub)
+*.pth
+*.pt
+*.ckpt
+*.bin
+*.onnx
+*.h5
+*.pb
+*.tflite
+*.safetensors
+
+# Datasets and Image Caches
+DeepCrack/
+DeepCrack_rgb/
+data/
+datasets/
+
+# Output / Results / Logs
+CMCNet_DeepCrack_results/
+results/
+runs/
+logs/
+*.log
+*_log.txt
+CMCNet_log_*.txt
+
+# Temporary / Incomplete Download Files
+*.crdownload
+*.tmp
+~$*
+
+# Environments & Virtual Envs
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# IDEs and Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS Specific
+.DS_Store
+Thumbs.db
