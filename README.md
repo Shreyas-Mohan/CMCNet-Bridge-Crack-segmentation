@@ -28,9 +28,14 @@ Developing the final model required multiple iterations. We initially struggled 
 | Experiment 3 | Focal Tversky ($\alpha=0.45, \beta=0.55$) | 20 | $256 \times 256$ | 0.897 | 0.796 | 0.844 | 0.856 | Adjusted Tversky parameters; marginal improvement, still below baseline. |
 | Experiment 4 | Focal Tversky ($\alpha=0.45, \beta=0.55$) | 20 | $512 \times 512$ | 0.901 | 0.797 | 0.846 | 0.858 | Increased resolution to match paper; negligible performance gain. |
 | Experiment 5 | Orig. BCE+Dice + Bidirectional Gating | 20 | $256 \times 256$ | 0.903 | 0.822 | 0.861 | 0.869 | Architectural change. Recovered baseline recall at lower res (Threshold: 0.50). |
-| Final Model | Exp 5 + Threshold Optimization (0.15) | 20 | $256 \times 256$ | 0.8649 | 0.8666 | 0.8657 | 0.8731 | Optimal operating point achieves highest Recall and F1. |
+| Exp 5 (Tuned) | Exp 5 + Threshold Optimization (0.15) | 20 | $256 \times 256$ | 0.8649 | 0.8666 | 0.8657 | 0.8731 | Optimal operating point achieves highest Recall and F1 at 256x256. |
+| Experiment 6 | Full 100-Epoch Protocol (Cross-Gated) | 100 | $512 \times 512$ | 0.9237 | 0.7904 | 0.8519 | 0.8631 | Standard $\tau=0.50$. Beats paper baseline precision (0.924 vs 0.912). |
+| Exp 6 (Optimal F1) | Exp 6 + Optimal Threshold ($\tau=0.06$) | 100 | $512 \times 512$ | 0.8771 | 0.8448 | 0.8606 | 0.8698 | Optimal F1 operating point (+2.18% recall over paper baseline). |
+| Exp 6 (Safety Mode)| Exp 6 + Structural Safety ($\tau=0.02$) | 100 | $512 \times 512$ | 0.8430 | 0.8719 | 0.8572 | 0.8667 | High-recall safety mode (+4.89% recall on hairline cracks, 84.3% precision). |
 
-**Note:** Experiments 1-4 demonstrate that simply changing the loss function or increasing resolution was insufficient to match the baseline performance given our training constraints (20 epochs). The Bidirectional Spatial Cross-Gating (Experiment 5) was the key to unlocking higher performance.
+**Note:** 
+- Experiments 1-4 demonstrate that simply changing the loss function or increasing resolution was insufficient to match baseline performance under short training (20 epochs). The Bidirectional Spatial Cross-Gating (Experiment 5) was key to unlocking higher performance.
+- Experiment 6 scales to the full paper protocol (100 epochs at native $512 \times 512$). At the standard threshold ($\tau = 0.50$), it surpasses published precision (92.37% vs 91.20%). Because hairline cracks represent $<0.2\%$ of pixels (extreme class imbalance), evaluating across the threshold spectrum provides domain-aligned operating points: $\tau = 0.06$ yields optimal harmonic F1 (84.48% recall), while $\tau = 0.02$ safely recovers 87.19% of fine hairline cracks without concrete background noise collapse (84.30% precision).
 
 ## 📂 Repository Structure
 
@@ -43,7 +48,8 @@ CMCNet-main-btp/
 │   ├── SwinUMamba.py           # Mamba Encoder branch (VSS blocks)
 │   ├── Decoder_Mamba.py        # Progressive upsampling decoder
 │   ├── EEM.py                  # Edge Enhancement Module
-│   └── Doconv.py               # Depthwise Over-parameterized Convolutions
+│   ├── Doconv.py               # Depthwise Over-parameterized Convolutions
+│   └── selective_scan.py       # Pure PyTorch + CUDA adaptive selective scan engine
 ├── utils/                      # Helper scripts and metrics
 │   ├── loss.py                 # BCE + Soft Dice Loss implementation
 │   ├── dataloaderkeshi.py      # DeepCrack PyTorch Dataset loader

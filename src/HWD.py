@@ -2,7 +2,6 @@ import torch
 import torch.nn as nn
 from pytorch_wavelets import DWTForward
 
-
 class Down_wt(nn.Module):
     def __init__(self, in_ch, out_ch):
         super(Down_wt, self).__init__()
@@ -14,10 +13,13 @@ class Down_wt(nn.Module):
         )
 
     def forward(self, x):
-        yL, yH = self.wt(x)
-        y_HL = yH[0][:, :, 0, ::]
-        y_LH = yH[0][:, :, 1, ::]
-        y_HH = yH[0][:, :, 2, ::]
-        x = torch.cat([yL, y_HL, y_LH, y_HH], dim=1)
-        x = self.conv_bn_relu(x)
+        # pytorch_wavelets requires float32 for its custom DWT backward kernels
+        with torch.amp.autocast('cuda', enabled=False):
+            x_f32 = x.float()
+            yL, yH = self.wt(x_f32)
+            y_HL = yH[0][:, :, 0, ::]
+            y_LH = yH[0][:, :, 1, ::]
+            y_HH = yH[0][:, :, 2, ::]
+            x_cat = torch.cat([yL, y_HL, y_LH, y_HH], dim=1)
+        x = self.conv_bn_relu(x_cat.to(x.dtype))
         return x

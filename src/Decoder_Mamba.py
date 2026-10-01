@@ -13,8 +13,7 @@ from einops import rearrange, repeat
 from sympy import expand
 from timm.models.layers import DropPath, to_2tuple, trunc_normal_
 
-# --- MODIFIED: Ensure we import the reference implementation for CPU execution ---
-from mamba_ssm.ops.selective_scan_interface import selective_scan_fn, selective_scan_ref
+from src.selective_scan import get_selective_scan_fn, selective_scan_ref
 DropPath.__repr__ = lambda self: f"timm.DropPath({self.drop_prob})"
 
 # The nnunet reference imports are deleted since they aren't utilized in the class forward pass.
@@ -103,9 +102,7 @@ class SS2D(nn.Module):
         self.A_logs = self.A_log_init(self.d_state, self.d_inner, copies=4, merge=True) 
         self.Ds = self.D_init(self.d_inner, copies=4, merge=True) 
 
-        # --- MODIFIED: Force reference implementation for CPU compatibility ---
-        self.selective_scan = selective_scan_fn
-
+        self.selective_scan = get_selective_scan_fn()
         self.out_norm = nn.LayerNorm(self.d_inner)
         self.out_proj = nn.Linear(self.d_inner, self.d_model, bias=bias, **factory_kwargs)
         self.dropout = nn.Dropout(dropout) if dropout > 0. else None

@@ -16,7 +16,7 @@ class Datases_loader(Dataset):
         self.w = w
         self.images = []
         self.labels = []
-        self.save_dir = r'DeepCrack_rgb'
+        self.save_dir = save_dir
 
         if self.save_dir and not os.path.exists(self.save_dir):
             os.makedirs(self.save_dir)

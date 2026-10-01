@@ -12,8 +12,7 @@ import torch.utils.checkpoint as checkpoint
 from einops import rearrange, repeat
 from timm.models.layers import DropPath, to_2tuple, trunc_normal_
 
-# --- MODIFIED: Ensure we import the reference implementation for CPU/NPU execution ---
-from mamba_ssm.ops.selective_scan_interface import selective_scan_fn, selective_scan_ref
+from src.selective_scan import get_selective_scan_fn, selective_scan_ref
 DropPath.__repr__ = lambda self: f"timm.DropPath({self.drop_prob})"
 
 class PatchEmbed2D(nn.Module):
@@ -147,9 +146,7 @@ class SS2D(nn.Module):
         self.A_logs = self.A_log_init(self.d_state, self.d_inner, copies=4, merge=True) # (K=4, D, N)
         self.Ds = self.D_init(self.d_inner, copies=4, merge=True) # (K=4, D, N)
 
-        # --- MODIFIED: Force reference implementation for CPU compatibility ---
-        self.selective_scan = selective_scan_fn
-
+        self.selective_scan = get_selective_scan_fn()
         self.out_norm = nn.LayerNorm(self.d_inner)
         self.out_proj = nn.Linear(self.d_inner, self.d_model, bias=bias, **factory_kwargs)
         self.dropout = nn.Dropout(dropout) if dropout > 0. else None
