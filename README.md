@@ -20,18 +20,18 @@ To optimize the architecture for memory-constrained environments while improving
 
 Developing the final model required multiple iterations. We initially struggled with low recall. The table below details our experimental progression, highlighting both failed attempts to boost recall via loss functions and the ultimate success of our architectural modifications.
 
-| Experiment | Configuration | Epochs | Image Size | Precision | Recall | F1 | mIoU | Notes |
-|---|---|---:|---|---:|---:|---:|---:|---|
-| Paper Baseline | CMC-Net paper | 100 | $512 \times 512$ | 0.912 | 0.823 | 0.865 | 0.874 | Published benchmark. |
-| Experiment 1 | Original BCE + Dice loss | 20 | $256 \times 256$ | 0.930 | 0.774 | 0.845 | 0.857 | High precision, but poor recall compared to paper. |
-| Experiment 2 | Focal Tversky ($\alpha=0.30, \beta=0.70$) | 20 | $256 \times 256$ | 0.833 | 0.805 | 0.819 | 0.835 | Attempted to boost recall via loss; heavily penalized precision. |
-| Experiment 3 | Focal Tversky ($\alpha=0.45, \beta=0.55$) | 20 | $256 \times 256$ | 0.897 | 0.796 | 0.844 | 0.856 | Adjusted Tversky parameters; marginal improvement, still below baseline. |
-| Experiment 4 | Focal Tversky ($\alpha=0.45, \beta=0.55$) | 20 | $512 \times 512$ | 0.901 | 0.797 | 0.846 | 0.858 | Increased resolution to match paper; negligible performance gain. |
-| Experiment 5 | Orig. BCE+Dice + Bidirectional Gating | 20 | $256 \times 256$ | 0.903 | 0.822 | 0.861 | 0.869 | Architectural change. Recovered baseline recall at lower res (Threshold: 0.50). |
-| Exp 5 (Tuned) | Exp 5 + Threshold Optimization (0.15) | 20 | $256 \times 256$ | 0.8649 | 0.8666 | 0.8657 | 0.8731 | Optimal operating point achieves highest Recall and F1 at 256x256. |
-| Experiment 6 | Full 100-Epoch Protocol (Cross-Gated) | 100 | $512 \times 512$ | 0.9237 | 0.7904 | 0.8519 | 0.8631 | Standard $\tau=0.50$. Beats paper baseline precision (0.924 vs 0.912). |
-| Exp 6 (Optimal F1) | Exp 6 + Optimal Threshold ($\tau=0.06$) | 100 | $512 \times 512$ | 0.8771 | 0.8448 | 0.8606 | 0.8698 | Optimal F1 operating point (+2.18% recall over paper baseline). |
-| Exp 6 (Safety Mode)| Exp 6 + Structural Safety ($\tau=0.02$) | 100 | $512 \times 512$ | 0.8430 | 0.8719 | 0.8572 | 0.8667 | High-recall safety mode (+4.89% recall on hairline cracks, 84.3% precision). |
+| Experiment | Configuration | Epochs | Resolution | Precision | Recall | F1 | mIoU | Notes |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :--- |
+| Paper&nbsp;Baseline | CMC-Net paper | 100 | 512×512 | 0.912 | 0.823 | 0.865 | 0.874 | Published benchmark. |
+| Experiment&nbsp;1 | Original BCE + Dice loss | 20 | 256×256 | 0.930 | 0.774 | 0.845 | 0.857 | High precision, but poor recall compared to paper. |
+| Experiment&nbsp;2 | Focal Tversky (α=0.30, β=0.70) | 20 | 256×256 | 0.833 | 0.805 | 0.819 | 0.835 | Attempted to boost recall via loss; heavily penalized precision. |
+| Experiment&nbsp;3 | Focal Tversky (α=0.45, β=0.55) | 20 | 256×256 | 0.897 | 0.796 | 0.844 | 0.856 | Adjusted Tversky parameters; marginal improvement, still below baseline. |
+| Experiment&nbsp;4 | Focal Tversky (α=0.45, β=0.55) | 20 | 512×512 | 0.901 | 0.797 | 0.846 | 0.858 | Increased resolution to match paper; negligible performance gain. |
+| Experiment&nbsp;5 | Orig. BCE+Dice + Cross-Gating | 20 | 256×256 | 0.903 | 0.822 | 0.861 | 0.869 | Architectural change. Recovered baseline recall at lower res (τ=0.50). |
+| Exp&nbsp;5&nbsp;(Tuned) | Exp 5 + Threshold Optimization | 20 | 256×256 | 0.865 | 0.867 | 0.866 | 0.873 | Optimal operating point (τ=0.15) achieves highest Recall and F1 at 256×256. |
+| Experiment&nbsp;6 | Full 100-Epoch Protocol (Cross-Gated) | 100 | 512×512 | 0.924 | 0.790 | 0.852 | 0.863 | Standard τ=0.50. Beats published paper precision (0.924 vs 0.912). |
+| Exp&nbsp;6&nbsp;(Optimal&nbsp;F1) | Exp 6 + Optimal Threshold (τ=0.06) | 100 | 512×512 | 0.877 | 0.845 | 0.861 | 0.870 | Optimal F1 operating point (+2.18% recall over paper baseline). |
+| Exp&nbsp;6&nbsp;(Safety&nbsp;Mode) | Exp 6 + Structural Safety (τ=0.02) | 100 | 512×512 | 0.843 | 0.872 | 0.857 | 0.867 | High-recall safety mode (+4.89% recall on hairline cracks, 84.3% precision). |
 
 **Note:** 
 - Experiments 1-4 demonstrate that simply changing the loss function or increasing resolution was insufficient to match baseline performance under short training (20 epochs). The Bidirectional Spatial Cross-Gating (Experiment 5) was key to unlocking higher performance.
