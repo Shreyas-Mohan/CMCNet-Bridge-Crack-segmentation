@@ -54,3 +54,4 @@ venv.bak/
 # OS Specific
 .DS_Store
 Thumbs.db
+cmcnet-key-pair.pem

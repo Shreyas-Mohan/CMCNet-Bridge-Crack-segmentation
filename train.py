@@ -67,12 +67,16 @@ def train():
     data_dir = args.data_dir
     if not os.path.exists(os.path.join(data_dir, 'train_img')):
         candidates = [
+            'DeepCrack',
+            os.path.join(os.getcwd(), 'DeepCrack'),
+            os.path.join(os.path.dirname(os.getcwd()), 'DeepCrack'),
+            os.path.expanduser('~/DeepCrack'),
+            '/home/ubuntu/DeepCrack',
+            '/home/ubuntu/CMCNet-Bridge-Crack-segmentation/DeepCrack',
             '/content/DeepCrack/DeepCrack',
             '/content/DeepCrack',
             '/content/DeepCrack_Dataset/DeepCrack',
             '/content/CMCNet-main-btp/DeepCrack',
-            'DeepCrack',
-            os.path.join(os.getcwd(), 'DeepCrack')
         ]
         for cand in candidates:
             if os.path.exists(os.path.join(cand, 'train_img')):
