@@ -3,22 +3,35 @@ import torch.nn as nn
 
 from src.CNN import CNN
 from src.Fusion import fusion
+from src.BSGDA_Fusion import BSGDA_Fusion
 from src.EEM import EEM
 from src.SwinUMamba import SwinUMamba
 from src.Decoder_Mamba import UNetResDecoder
+
 class Net_final(nn.Module):
-    def __init__(self):
+    def __init__(self, fusion_type="bsgda"):
         super().__init__()
+        self.fusion_type = fusion_type
         self.encoder1 = CNN()
         self.encoder2 = SwinUMamba()
-        self.fusion1 = fusion(64,64)
-        self.fusion2 = fusion(128,128)
-        self.fusion3 = fusion(256,256)
-        self.fusion4 = fusion(512,512)
+        
+        if fusion_type == "bsgda":
+            # Experiment 7: Bidirectional Semantic-Decoupled Aggregation (BS-GDA)
+            self.fusion1 = BSGDA_Fusion(64, 64)
+            self.fusion2 = BSGDA_Fusion(128, 128)
+            self.fusion3 = BSGDA_Fusion(256, 256)
+            self.fusion4 = BSGDA_Fusion(512, 512)
+        else:
+            # Baseline / Experiments 5-6: Bidirectional Spatial Cross-Gating
+            self.fusion1 = fusion(64, 64)
+            self.fusion2 = fusion(128, 128)
+            self.fusion3 = fusion(256, 256)
+            self.fusion4 = fusion(512, 512)
+
         self.decoder_mamba = UNetResDecoder()
-        self.ffc1 = EEM(64,16,64,64,128)
-        self.ffc2 = EEM(128,32,128,128,64)
-        self.ffc3 = EEM(256,64,256,256,32)
+        self.ffc1 = EEM(64, 16, 64, 64, 128)
+        self.ffc2 = EEM(128, 32, 128, 128, 64)
+        self.ffc3 = EEM(256, 64, 256, 256, 32)
 
     def forward(self, x):
         x1, x2, x3, x4, out1 = self.encoder1(x)

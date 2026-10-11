@@ -13,6 +13,7 @@ def parse_args():
     parser.add_argument("--batchsz", type=int, default=1, help="Batch size (default: 1)")
     parser.add_argument("--checkpoint", type=str, default=None, help="Path to .pth checkpoint file")
     parser.add_argument("--data_dir", type=str, default="DeepCrack", help="Path to DeepCrack dataset directory")
+    parser.add_argument("--fusion", type=str, default="auto", choices=["auto", "bsgda", "original"], help="Fusion module type (default: auto)")
     return parser.parse_args()
 
 args = parse_args()
@@ -23,8 +24,12 @@ imgsz = args.imgsz
 # Automatically locate checkpoint if not explicitly provided
 if args.checkpoint and os.path.exists(args.checkpoint):
     savedir = args.checkpoint
+elif os.path.exists(os.path.join(os.getcwd(), 'CMCNet_BSGDA_best_f1.pth')):
+    savedir = os.path.join(os.getcwd(), 'CMCNet_BSGDA_best_f1.pth')
 elif os.path.exists(os.path.join(os.getcwd(), 'CMCNet_best_f1.pth')):
     savedir = os.path.join(os.getcwd(), 'CMCNet_best_f1.pth')
+elif os.path.exists('CMCNet_BSGDA_best_f1.pth'):
+    savedir = 'CMCNet_BSGDA_best_f1.pth'
 elif os.path.exists('CMCNet_best_f1.pth'):
     savedir = 'CMCNet_best_f1.pth'
 elif os.path.exists('CMCNet_CrossGated_20260816_155857.pth'):
@@ -62,12 +67,29 @@ print(f"Using test dataset from: {data_dir}")
 dataset = dataloader(imgdir, labdir, imgsz, imgsz)
 testsets = DataLoader(dataset, batch_size=batchsz, shuffle=False)
 
-model = Net_final().to(device)
+# Determine fusion architecture
+fusion_type = args.fusion
+state_dict = None
 if os.path.exists(savedir):
     print(f"Loading weights from: {savedir}")
-    model.load_state_dict(torch.load(savedir, map_location=device), strict=False)
+    raw_ckpt = torch.load(savedir, map_location=device)
+    state_dict = raw_ckpt.get("state_dict", raw_ckpt)
+    if fusion_type == "auto":
+        if any("crack_gate" in k or "pre_gate" in k for k in state_dict.keys()):
+            fusion_type = "bsgda"
+        elif any("spatial_gate" in k or "mm.conv1" in k for k in state_dict.keys()):
+            fusion_type = "original"
+        else:
+            fusion_type = "bsgda"
 else:
     print(f"Warning: Checkpoint '{savedir}' not found. Please provide valid --checkpoint path.")
+    if fusion_type == "auto":
+        fusion_type = "bsgda"
+
+print(f"Model architecture: CMC-Net with {fusion_type.upper()} Fusion")
+model = Net_final(fusion_type=fusion_type).to(device)
+if state_dict is not None:
+    model.load_state_dict(state_dict, strict=False)
 model.eval()
 
 # Extended sweep: includes fine-grained low thresholds (0.02-0.08) to capture faint hairline cracks

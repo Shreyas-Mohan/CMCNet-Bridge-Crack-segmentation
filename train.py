@@ -34,6 +34,7 @@ def parse_args():
     parser.add_argument("--amp", action="store_true", default=False, help="Enable Automatic Mixed Precision (default: False for pytorch_wavelets stability)")
     parser.add_argument("--data_dir", type=str, default="DeepCrack", help="Path to DeepCrack dataset directory")
     parser.add_argument("--save_dir", type=str, default=None, help="Directory to save checkpoints and logs")
+    parser.add_argument("--fusion", type=str, default="bsgda", choices=["bsgda", "original"], help="Fusion module type (default: bsgda for Exp 7, 'original' for Exp 5-6)")
     return parser.parse_args()
 
 def train():
@@ -52,7 +53,8 @@ def train():
     print(f"Checkpoints and logs will be saved to: {save_dir}")
 
     # Initialize model
-    model = Net_final().to(device)
+    print(f"Architecture: CMC-Net with {args.fusion.upper()} Fusion")
+    model = Net_final(fusion_type=args.fusion).to(device)
     optimizer = optim.AdamW(model.parameters(), lr=args.lr)
     scheduler = lr_scheduler.CosineAnnealingLR(optimizer=optimizer, T_max=args.epochs, eta_min=1e-6)
     criterion = Loss()
@@ -162,19 +164,21 @@ def train():
         if F1_ > best_f1:
             best_f1 = F1_
             best_epoch = epoch + 1
-            best_save_path = os.path.join(save_dir, f"CMCNet_best_f1.pth")
+            best_save_path = os.path.join(save_dir, f"CMCNet_{args.fusion.upper()}_best_f1.pth")
             torch.save(model.state_dict(), best_save_path)
+            # Also keep standard pointer for test scripts
+            torch.save(model.state_dict(), os.path.join(save_dir, "CMCNet_best_f1.pth"))
 
         # Periodic checkpoint every 20 epochs
         if (epoch + 1) % 20 == 0:
-            periodic_path = os.path.join(save_dir, f"CMCNet_epoch_{epoch + 1}.pth")
+            periodic_path = os.path.join(save_dir, f"CMCNet_{args.fusion.upper()}_epoch_{epoch + 1}.pth")
             torch.save(model.state_dict(), periodic_path)
 
     # Save final model
-    final_save_path = os.path.join(save_dir, f"CMCNet_CrossGated_512x512_{timestamp}_final.pth")
+    final_save_path = os.path.join(save_dir, f"CMCNet_{args.fusion.upper()}_512x512_{timestamp}_final.pth")
     torch.save(model.state_dict(), final_save_path)
     print(f"\n✅ Training complete! Best F1: {best_f1:.4f} at epoch {best_epoch}")
-    print(f"Saved best weights to: {os.path.join(save_dir, 'CMCNet_best_f1.pth')}")
+    print(f"Saved best weights to: {os.path.join(save_dir, f'CMCNet_{args.fusion.upper()}_best_f1.pth')}")
     print(f"Saved final weights to: {final_save_path}")
 
     # Save training logs
