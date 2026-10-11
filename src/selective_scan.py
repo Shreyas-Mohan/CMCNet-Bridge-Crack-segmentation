@@ -3,6 +3,7 @@ import torch.nn.functional as F
 from einops import rearrange, repeat
 
 try:
+    import selective_scan_cuda
     from mamba_ssm.ops.selective_scan_interface import selective_scan_fn as _cuda_selective_scan
 except (ImportError, ModuleNotFoundError):
     _cuda_selective_scan = None
